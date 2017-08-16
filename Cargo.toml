@@ -1,0 +1,10 @@
+[package]
+name = "story"
+version = "0.1.0"
+authors = ["guidao"]
+
+[dependencies]
+reqwest = "*"
+scraper = "*"
+clap= "*"
+    
