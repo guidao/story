@@ -7,4 +7,4 @@ authors = ["guidao"]
 reqwest = "*"
 scraper = "*"
 clap= "*"
-    
+url = "*"
