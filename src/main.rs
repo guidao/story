@@ -38,17 +38,20 @@ lazy_static! {
 
 fn main() {
     let matches = App::new("story")
-        .subcommand(SubCommand::with_name("search")
+        .subcommand(SubCommand::with_name("search").about("search story")
                         .arg(Arg::with_name("name").help("search story")))
-        .subcommand(SubCommand::with_name("download").arg(Arg::with_name("link").help("download link")))
+        .subcommand(SubCommand::with_name("download").about("download story").arg(Arg::with_name("link").help("download link")))
         .get_matches();
     match matches.subcommand() {
         ("search", Some(search_command)) => {
             let name = search_command.value_of("name").unwrap();
             let result = GLOBAL_BOOK.lock().unwrap().get("us23").unwrap().search(name);
+            let mut output = String::new();
+            output.push_str("NAME\tLINK\n");
             for story in result {
-                println!("Name: {}  Link: {}", story.name, story.link);
+                output.push_str(&format!("{}\t{}\n", story.name, story.link));
             }
+            println!("{}", output);
         }
         ("download", Some(get_command)) => {
             let link = get_command.value_of("link").unwrap();
