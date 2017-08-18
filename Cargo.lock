@@ -3,6 +3,7 @@ name = "story"
 version = "0.1.0"
 dependencies = [
  "clap 2.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "scraper 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",

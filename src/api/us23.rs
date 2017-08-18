@@ -14,12 +14,14 @@ struct StoryDir {
     pub link: String,
 }
 
+#[derive(Clone)]
 pub struct US23 {}
 impl US23 {
     pub fn new() -> US23 {
         US23{}
     }
 }
+
 struct IterChapter {
     dir :Vec<StoryDir>,
     cur :i32,
@@ -69,7 +71,7 @@ impl IStory for US23 {
 }
 
 
-pub const ORIGIN_LINK: &str = "http://www.23us.so/files/article/html/1/1247/index.html";
+// pub const ORIGIN_LINK: &str = "http://www.23us.so/files/article/html/1/1247/index.html";
 
 fn get_story_dir(link: &str) -> Vec<StoryDir> {
     let mut resp = reqwest::get(link).unwrap();
