@@ -1,5 +1,6 @@
 
 use std::io::Read;
+use std::io;
 use scraper::Html;
 use scraper::Selector;
 use reqwest;
@@ -7,6 +8,8 @@ use std::str::FromStr;
 use IStory;
 use SearchResult;
 use Chapter;
+
+// pub const ORIGIN_LINK: &str = "http://www.23us.so/files/article/html/1/1247/index.html";
 
 #[derive(Debug)]
 struct StoryDir {
@@ -45,22 +48,7 @@ impl Iterator for IterChapter {
 
 impl IStory for US23 {
     fn search(&self, name: &str) ->Vec<SearchResult> {
-        let search_link = format!("http://zhannei.baidu.com/cse/search?q={}&click=1&entry=1&s=5513259216532962936&nsid=", name);
-        let mut resp = reqwest::get(&search_link).unwrap();
-        let mut content = String::new();
-        resp.read_to_string(&mut content);
-        let document = Html::parse_document(&content);
-        let selector = Selector::parse("a[cpos=title]").unwrap();
-        let mut v = Vec::new();
-        for element in document.select(&selector) {
-            let val = element.value();
-            let sd = SearchResult{
-                name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
-                link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
-            };
-            v.push(sd);
-        }
-        v
+        search_story(name).unwrap_or_default()
     }
     fn download(&self, link: &str) -> Box<Iterator<Item = Chapter>>{
         Box::new(IterChapter{
@@ -71,14 +59,17 @@ impl IStory for US23 {
 }
 
 
-// pub const ORIGIN_LINK: &str = "http://www.23us.so/files/article/html/1/1247/index.html";
 
 fn get_story_dir(link: &str) -> Vec<StoryDir> {
-    let mut resp = reqwest::get(link).unwrap();
+    get_story_dir_result(link).unwrap_or_default()
+}
+
+fn get_story_dir_result(link:&str) -> Result<Vec<StoryDir>, StoryErr> {
+    let mut resp = reqwest::get(link)?;
     let mut content = String::new();
-    resp.read_to_string(&mut content);
+    resp.read_to_string(&mut content)?;
     let document = Html::parse_document(&content);
-    let selector = Selector::parse("td[class=L]>a").unwrap();
+    let selector = Selector::parse("td[class=L]>a")?;
     let mut v = Vec::new();
     for element in document.select(&selector) {
         let val = element.value();
@@ -88,39 +79,66 @@ fn get_story_dir(link: &str) -> Vec<StoryDir> {
         };
         v.push(sd)
     }
-    v
+    Ok(v)
 }
 
 pub fn get_story_content(link: &str) -> String {
-    let mut resp = reqwest::get(link).unwrap();
+    get_story_content_result(link).unwrap_or_default()
+}
+
+fn get_story_content_result(link :&str) ->Result<String, StoryErr> {
+    let mut resp = reqwest::get(link)?;
     let mut content = String::new();
-    resp.read_to_string(&mut content);
+    resp.read_to_string(&mut content)?;
     let document = Html::parse_document(&content);
-    let selector = Selector::parse("dd[id=contents]").unwrap();
+    let selector = Selector::parse("dd[id=contents]")?;
     let element = document.select(&selector).next().unwrap();
     let s = element.inner_html();
     let s = s.replace("&nbsp;", "")
         .replace("\n", "")
         .replace("<br>", "\n");
 
-    return s;
+    Ok(s)
 }
 
-fn search_story(name: &str) -> Vec<StoryDir> {
-    let search_link = format!("http://zhannei.baidu.com/cse/search?q={}&click=1&entry=1&s=5513259216532962936&nsid=", name);
-    let mut resp = reqwest::get(&search_link).unwrap();
-    let mut content = String::new();
-    resp.read_to_string(&mut content);
-    let document = Html::parse_document(&content);
-    let selector = Selector::parse("a[cpos=title]").unwrap();
+
+enum StoryErr {
+    ERR1,
+}
+
+impl From<()> for StoryErr {
+    fn from(_ :()) ->StoryErr {
+        return StoryErr::ERR1;
+    }
+}
+
+impl From<io::Error> for StoryErr {
+    fn from(_: io::Error) ->StoryErr{
+        return StoryErr::ERR1;
+    }
+}
+
+impl From<reqwest::Error> for StoryErr {
+    fn from(_: reqwest::Error) ->StoryErr{
+        return StoryErr::ERR1;
+    }
+}
+
+fn search_story(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
     let mut v = Vec::new();
+    let search_link = format!("http://zhannei.baidu.com/cse/search?q={}&click=1&entry=1&s=5513259216532962936&nsid=", name);
+    let mut resp = reqwest::get(&search_link)?;
+    let mut content = String::new();
+    resp.read_to_string(&mut content)?;
+    let document = Html::parse_document(&content);
+    let selector = Selector::parse("a[cpos=title]")?;
     for element in document.select(&selector) {
         let val = element.value();
-        let sd = StoryDir{
+        let sd = SearchResult{
             name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
             link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
         };
         v.push(sd);
     }
-    v
+    return Ok(v)
 }
