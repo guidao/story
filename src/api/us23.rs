@@ -58,6 +58,27 @@ impl IStory for US23 {
     }
 }
 
+enum StoryErr {
+    ERR1,
+}
+
+impl From<()> for StoryErr {
+    fn from(_ :()) ->StoryErr {
+        return StoryErr::ERR1;
+    }
+}
+
+impl From<io::Error> for StoryErr {
+    fn from(_: io::Error) ->StoryErr{
+        return StoryErr::ERR1;
+    }
+}
+
+impl From<reqwest::Error> for StoryErr {
+    fn from(_: reqwest::Error) ->StoryErr{
+        return StoryErr::ERR1;
+    }
+}
 
 
 fn get_story_dir(link: &str) -> Vec<StoryDir> {
@@ -102,27 +123,7 @@ fn get_story_content_result(link :&str) ->Result<String, StoryErr> {
 }
 
 
-enum StoryErr {
-    ERR1,
-}
 
-impl From<()> for StoryErr {
-    fn from(_ :()) ->StoryErr {
-        return StoryErr::ERR1;
-    }
-}
-
-impl From<io::Error> for StoryErr {
-    fn from(_: io::Error) ->StoryErr{
-        return StoryErr::ERR1;
-    }
-}
-
-impl From<reqwest::Error> for StoryErr {
-    fn from(_: reqwest::Error) ->StoryErr{
-        return StoryErr::ERR1;
-    }
-}
 
 fn search_story(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
     let mut v = Vec::new();
