@@ -13,4 +13,4 @@ TODO:
   1. 搜索小说
   story search 小说名
   2. 下载小说并保存到文件
-  story get link >> name.txt
+  story download link >> name.txt
