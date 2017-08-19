@@ -135,25 +135,23 @@ fn search_story(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
     let desc = Selector::parse("div[class=result-game-item-detail]")?;
     for book in document.select(&desc) {
         let author_seletor = Selector::parse("p[class=result-game-item-info-tag]>span")?;
-        let mut auth = book.select(&author_seletor);
-        auth.next();
-        let auther = auth.next().unwrap().inner_html();
+        let auther = match book.select(&author_seletor).nth(1){
+            Some(inner) => inner.inner_html(),
+            None => "".to_owned(),
+        };
         let selector = Selector::parse("a[cpos=title]")?;
-        for element in book.select(&selector) {
-            let val = element.value();
+        book.select(&selector).next().and_then(|inner|{
+            let val = inner.value();
             let sd = SearchResult{
                 name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
                 link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
                 author: String::from_str(auther.trim()).unwrap_or_default(),
             };
             v.push(sd);
-            break;
-        }
+            Some(())
+        });
     }
-
     return Ok(v)
 }
-
-
 
 
