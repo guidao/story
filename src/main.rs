@@ -20,6 +20,7 @@ trait IStory {
 
 struct SearchResult {
     name: String,
+    author: String,
     link: String,
 }
 
@@ -47,9 +48,9 @@ fn main() {
             let name = search_command.value_of("name").unwrap();
             let result = GLOBAL_BOOK.lock().unwrap().get("us23").unwrap().search(name);
             let mut output = String::new();
-            output.push_str("NAME\tLINK\n");
+            output.push_str("NAME\tAUTHER\tLINK\n");
             for story in result {
-                output.push_str(&format!("{}\t{}\n", story.name, story.link));
+                output.push_str(&format!("{}\t{}\t{}\n", story.name, story.author, story.link));
             }
             println!("{}", output);
         }

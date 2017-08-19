@@ -132,14 +132,28 @@ fn search_story(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
     let mut content = String::new();
     resp.read_to_string(&mut content)?;
     let document = Html::parse_document(&content);
-    let selector = Selector::parse("a[cpos=title]")?;
-    for element in document.select(&selector) {
-        let val = element.value();
-        let sd = SearchResult{
-            name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
-            link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
-        };
-        v.push(sd);
+    let desc = Selector::parse("div[class=result-game-item-detail]")?;
+    for book in document.select(&desc) {
+        let author_seletor = Selector::parse("p[class=result-game-item-info-tag]>span")?;
+        let mut auth = book.select(&author_seletor);
+        auth.next();
+        let auther = auth.next().unwrap().inner_html();
+        let selector = Selector::parse("a[cpos=title]")?;
+        for element in book.select(&selector) {
+            let val = element.value();
+            let sd = SearchResult{
+                name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
+                link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
+                author: String::from_str(auther.trim()).unwrap_or_default(),
+            };
+            v.push(sd);
+            break;
+        }
     }
+
     return Ok(v)
 }
+
+
+
+
