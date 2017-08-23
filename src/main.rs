@@ -16,6 +16,8 @@ use std::sync::Arc;
 trait IStory {
     fn search(&self, name: &str) -> Vec<SearchResult>;
     fn download(&self, link: &str) -> Box<Iterator<Item = Chapter>>;
+    fn content(&self, link: &str) -> Vec<ChapterDesc>;
+    fn get(&self, link: &str) -> String;
 }
 
 struct SearchResult {
@@ -27,6 +29,11 @@ struct SearchResult {
 struct Chapter {
     name: String,
     content: String,
+}
+
+struct ChapterDesc {
+    name: String,
+    link: String,
 }
 
 lazy_static! {
@@ -42,6 +49,8 @@ fn main() {
         .subcommand(SubCommand::with_name("search").about("search story")
                         .arg(Arg::with_name("name").help("search story")))
         .subcommand(SubCommand::with_name("download").about("download story").arg(Arg::with_name("link").help("download link")))
+        .subcommand(SubCommand::with_name("content").about("story dir").arg(Arg::with_name("link")))
+        .subcommand(SubCommand::with_name("get").about("get chapter").arg(Arg::with_name("link")))
         .get_matches();
     match matches.subcommand() {
         ("search", Some(search_command)) => {
@@ -61,6 +70,19 @@ fn main() {
                 println!("{}", chapter.name);
                 println!("{}", chapter.content);
             }
+        }
+        ("content", Some(content_command)) =>{
+            let link = content_command.value_of("link").unwrap();
+            let dir = build(link).unwrap().content(link);
+            println!("NAME\tLINK");
+            for c in dir.into_iter() {
+                println!("{}\t{}", c.name, c.link);
+            }
+        }
+        ("get", Some(get_command)) =>{
+            let link = get_command.value_of("link").unwrap();
+            let txt = build(link).unwrap().get(link);
+            println!("{}", txt);
         }
         _ => unreachable!(),
     }

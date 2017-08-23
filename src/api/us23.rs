@@ -8,7 +8,7 @@ use std::str::FromStr;
 use IStory;
 use SearchResult;
 use Chapter;
-
+use ChapterDesc;
 // pub const ORIGIN_LINK: &str = "http://www.23us.so/files/article/html/1/1247/index.html";
 
 #[derive(Debug)]
@@ -55,6 +55,17 @@ impl IStory for US23 {
             dir: get_story_dir(link),
             cur: 0,
         })
+    }
+    fn content(&self, link: &str) -> Vec<ChapterDesc> {
+        get_story_dir(link).into_iter().map(|x|{
+            ChapterDesc{
+                name: x.name,
+                link: x.link,
+            }
+        }).collect()
+    }
+    fn get(&self, link: &str) ->String{
+        get_story_content(link)
     }
 }
 
@@ -121,7 +132,6 @@ fn get_story_content_result(link :&str) ->Result<String, StoryErr> {
 
     Ok(s)
 }
-
 
 
 
