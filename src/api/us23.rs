@@ -48,7 +48,7 @@ impl Iterator for IterChapter {
 
 impl IStory for US23 {
     fn search(&self, name: &str) ->Vec<SearchResult> {
-        search_story(name).unwrap_or_default()
+        search_story2(name).unwrap_or_default()
     }
     fn download(&self, link: &str) -> Box<Iterator<Item = Chapter>>{
         Box::new(IterChapter{
@@ -126,10 +126,6 @@ fn get_story_content_result(link :&str) ->Result<String, StoryErr> {
     let selector = Selector::parse("dd[id=contents]")?;
     let element = document.select(&selector).next().unwrap();
     let s = element.inner_html();
-    let s = s.replace("&nbsp;", "")
-        .replace("\n", "")
-        .replace("<br>", "\n");
-
     Ok(s)
 }
 
@@ -153,14 +149,57 @@ fn search_story(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
         book.select(&selector).next().and_then(|inner|{
             let val = inner.value();
             let sd = SearchResult{
-                name: String::from_str(val.attr("title").unwrap_or_default()).unwrap(),
-                link: String::from_str(val.attr("href").unwrap_or_default()).unwrap(),
+                name: String::from(val.attr("title").unwrap_or_default()),
+                link: String::from(val.attr("href").unwrap_or_default()),
                 author: String::from_str(auther.trim()).unwrap_or_default(),
+                img: String::from(""),
+                desc: String::from(""),
             };
             v.push(sd);
             Some(())
         });
     }
+    return Ok(v)
+}
+
+
+fn search_story2(name: &str) -> Result<Vec<SearchResult>, StoryErr> {
+    let mut v = Vec::new();
+    let search_link = format!("http://zhannei.baidu.com/cse/search?q={}&click=1&entry=1&s=5513259216532962936&nsid=", name);
+    let mut resp = reqwest::get(&search_link)?;
+    let mut content = String::new();
+    resp.read_to_string(&mut content)?;
+    let document = Html::parse_document(&content);
+    let desc = Selector::parse("div[class='result-item result-game-item']")?;
+    for book in document.select(&desc) {
+        let img = Selector::parse("img[class=result-game-item-pic-link-img]")?;
+        let imgUrl = match book.select(&img).nth(0) {
+            Some(inner) => {
+                String::from(inner.value().attr("src").unwrap_or_default())
+            },
+            None => "".to_owned(),
+        };
+
+        let author_seletor = Selector::parse("p[class=result-game-item-info-tag]>span")?;
+        let auther = match book.select(&author_seletor).nth(1){
+            Some(inner) => inner.inner_html(),
+            None => "".to_owned(),
+        };
+        let selector = Selector::parse("a[cpos=title]")?;
+        book.select(&selector).next().and_then(|inner|{
+            let val = inner.value();
+            let sd = SearchResult{
+                name: String::from(val.attr("title").unwrap_or_default()),
+                link: String::from(val.attr("href").unwrap_or_default()),
+                author: String::from(auther.trim()),
+                img: imgUrl,
+                desc: String::from("暂无描述"),
+            };
+            v.push(sd);
+            Some(())
+        });
+    }
+    println!("hello outer");
     return Ok(v)
 }
 
